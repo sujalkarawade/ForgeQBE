@@ -1,0 +1,232 @@
+import React, { useState } from 'react';
+import { useSession } from '../../context/SessionContext';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
+import SqlBlock from '../shared/SqlBlock';
+import DataTable from '../shared/DataTable';
+import ValidationBadge from '../shared/ValidationBadge';
+import './QueryResult.css';
+
+export default function QueryResult({ result, loading }) {
+  const { sessionId, addToHistory } = useSession();
+  const [activeTab, setActiveTab] = useState('results');
+  const [feedback, setFeedback] = useState('');
+  const [refining, setRefining] = useState(false);
+  const [currentResult, setCurrentResult] = useState(result);
+
+  // Sync when parent result changes
+  React.useEffect(() => {
+    setCurrentResult(result);
+    setActiveTab('results');
+  }, [result]);
+
+  const handleRefine = async () => {
+    if (!feedback.trim()) {
+      toast.error('Please describe what needs to change.');
+      return;
+    }
+    setRefining(true);
+    try {
+      const res = await api.post('/query/refine', {
+        sessionId,
+        originalSql: currentResult.sql,
+        feedback,
+        examples: [],
+      });
+      setCurrentResult(prev => ({ ...prev, ...res.data }));
+      addToHistory({
+        sql: res.data.sql,
+        rowCount: res.data.results.rowCount,
+        validation: res.data.validation,
+      });
+      setFeedback('');
+      toast.success('Query refined!');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setRefining(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="query-result loading-state">
+        <div className="loading-animation">
+          <div className="loading-dots">
+            <span /><span /><span />
+          </div>
+          <p>Analyzing patterns and generating SQL…</p>
+          <p className="loading-sub">This may take a few seconds</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentResult) return null;
+
+  if (currentResult.error) {
+    return (
+      <div className="query-result error-state">
+        <div className="error-icon">⚠</div>
+        <h3>Generation Failed</h3>
+        <p>{currentResult.error}</p>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 'results', label: `Results (${currentResult.results?.rowCount ?? 0})` },
+    { id: 'sql', label: 'SQL' },
+    { id: 'explanation', label: 'Explanation' },
+    { id: 'candidates', label: `Candidates (${currentResult.candidates?.length ?? 0})` },
+  ];
+
+  return (
+    <div className="query-result">
+      {/* Result header */}
+      <div className="result-header">
+        <div className="result-header-left">
+          <h2 className="result-title">
+            <span className="editor-step">3</span>
+            Query Result
+          </h2>
+          <div className="result-meta">
+            <ValidationBadge validation={currentResult.validation} />
+            <span className="result-stat">
+              {currentResult.results?.rowCount} rows
+            </span>
+            <span className="result-stat">
+              {currentResult.results?.duration}ms
+            </span>
+            <span className="result-stat confidence">
+              {Math.round((currentResult.confidence || 0) * 100)}% confidence
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="result-tabs">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            className={`result-tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div className="result-body">
+        {activeTab === 'results' && (
+          <DataTable
+            rows={currentResult.results?.rows || []}
+            fields={currentResult.results?.fields || []}
+          />
+        )}
+
+        {activeTab === 'sql' && (
+          <div className="sql-tab">
+            <SqlBlock sql={currentResult.sql} />
+            {currentResult.tablesUsed?.length > 0 && (
+              <div className="tables-used">
+                <span className="tables-used-label">Tables used:</span>
+                {currentResult.tablesUsed.map(t => (
+                  <span key={t} className="table-tag">{t}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'explanation' && (
+          <div className="explanation-tab">
+            <div className="explanation-card">
+              <h3>What this query does</h3>
+              <p>{currentResult.explanation}</p>
+            </div>
+            {currentResult.reasoning && (
+              <div className="explanation-card reasoning">
+                <h3>Reasoning</h3>
+                <p>{currentResult.reasoning}</p>
+              </div>
+            )}
+            {currentResult.validation && (
+              <div className="explanation-card validation">
+                <h3>Validation</h3>
+                <div className="validation-stats">
+                  <div className="val-stat">
+                    <span className="val-num">{currentResult.validation.matchedExamples}</span>
+                    <span className="val-label">/ {currentResult.validation.totalExamples} examples matched</span>
+                  </div>
+                  <div className="val-stat">
+                    <span className="val-num">{Math.round(currentResult.validation.matchRate * 100)}%</span>
+                    <span className="val-label">match rate</span>
+                  </div>
+                </div>
+                {currentResult.validation.unmatchedExamples?.length > 0 && (
+                  <div className="unmatched-list">
+                    <p className="unmatched-title">Unmatched examples:</p>
+                    {currentResult.validation.details
+                      .filter(d => !d.matched)
+                      .map(d => (
+                        <div key={d.exampleIndex} className="unmatched-item">
+                          <span className="unmatched-idx">#{d.exampleIndex + 1}</span>
+                          <span className="unmatched-reason">{d.reason}</span>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'candidates' && (
+          <div className="candidates-tab">
+            {currentResult.candidates?.length === 0 ? (
+              <p className="no-candidates">No pattern-based candidates were generated.</p>
+            ) : (
+              currentResult.candidates?.map((c, i) => (
+                <div key={i} className="candidate-item">
+                  <div className="candidate-header">
+                    <span className="candidate-num">Candidate {i + 1}</span>
+                    <span className="candidate-conf">
+                      {Math.round(c.confidence * 100)}% confidence
+                    </span>
+                  </div>
+                  <SqlBlock sql={c.sql} compact />
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Refine section */}
+      <div className="refine-section">
+        <h3 className="refine-title">Refine Query</h3>
+        <div className="refine-input-row">
+          <input
+            type="text"
+            className="refine-input"
+            value={feedback}
+            onChange={e => setFeedback(e.target.value)}
+            placeholder="e.g. 'Also filter by status = active' or 'Add ORDER BY created_at DESC'"
+            onKeyDown={e => e.key === 'Enter' && handleRefine()}
+          />
+          <button
+            className="btn-refine"
+            onClick={handleRefine}
+            disabled={refining || !feedback.trim()}
+          >
+            {refining ? <span className="spinner-sm" /> : '↺'} Refine
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

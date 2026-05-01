@@ -1,0 +1,61 @@
+.sql-block {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.sql-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+}
+
+.sql-block-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sql-copy-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.sql-copy-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.sql-code {
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0;
+}
+
+.sql-block.compact .sql-code {
+  padding: 12px;
+  font-size: 12px;
+}
+
+/* Syntax highlighting */
+.sql-keyword { color: #818cf8; font-weight: 600; }
+.sql-string { color: #34d399; }
+.sql-number { color: #fb923c; }
+.sql-comment { color: #64748b; font-style: italic; }
+.sql-ident { color: #e2e8f0; }

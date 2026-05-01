@@ -1,0 +1,320 @@
+.example-editor {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.editor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.editor-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.editor-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.editor-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.editor-mode-toggle {
+  display: flex;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.mode-btn {
+  padding: 5px 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mode-btn:hover { color: var(--text-secondary); }
+.mode-btn.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Table selector */
+.table-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.table-selector select {
+  padding: 6px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.table-selector select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Table editor */
+.table-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.example-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.example-table th {
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.example-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(51,65,85,0.4);
+}
+
+.example-table tr:last-child td { border-bottom: none; }
+
+.example-table td input {
+  width: 100%;
+  min-width: 80px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.example-table td input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-primary);
+}
+
+.example-table td input::placeholder { color: var(--text-muted); }
+
+.row-num {
+  width: 32px;
+  text-align: center;
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
+}
+
+.col-add { width: 36px; text-align: center; }
+.col-del { width: 32px; }
+
+.btn-add-col {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-add-col:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-del-row {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-del-row:not(:disabled):hover {
+  color: var(--error);
+  background: var(--error-dim);
+}
+
+.btn-del-row:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.btn-add-row {
+  align-self: flex-start;
+  padding: 6px 14px;
+  background: var(--bg-tertiary);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-add-row:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+/* JSON editor */
+.json-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.json-textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+.json-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.json-textarea.has-error { border-color: var(--error); }
+
+.json-error {
+  font-size: 12px;
+  color: var(--error);
+  padding: 4px 8px;
+}
+
+/* Hint */
+.hint-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hint-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.hint-input {
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color 0.15s;
+}
+
+.hint-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.hint-input::placeholder { color: var(--text-muted); }
+
+/* Generate button */
+.btn-generate {
+  padding: 13px 24px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.2px;
+}
+
+.btn-generate:not(:disabled):hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.spinner-btn {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
