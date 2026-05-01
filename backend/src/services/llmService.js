@@ -1,7 +1,18 @@
 const OpenAI = require('openai');
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.LLM_MODEL || 'gpt-4';
+
+// Lazy initialization — avoids crash on startup when key is not yet set
+let _openai = null;
+function getClient() {
+  if (!_openai) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not set. Add it to your .env file.');
+    }
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return _openai;
+}
 
 /**
  * Build the system prompt for the QBE task.
@@ -62,7 +73,7 @@ async function rankAndRefineQueries(examples, candidateQueries, schemaString, na
   const systemPrompt = buildSystemPrompt(schemaString);
   const userPrompt = buildUserPrompt(examples, candidateQueries, naturalLanguageHint);
 
-  const response = await openai.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: MODEL,
     messages: [
       { role: 'system', content: systemPrompt },
@@ -94,7 +105,7 @@ async function rankAndRefineQueries(examples, candidateQueries, schemaString, na
  * Generate a natural language explanation for a given SQL query.
  */
 async function explainQuery(sql, schemaString) {
-  const response = await openai.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: MODEL,
     messages: [
       {
@@ -119,7 +130,7 @@ async function explainQuery(sql, schemaString) {
  * Refine an existing query based on user feedback.
  */
 async function refineQuery(originalSql, feedback, schemaString, examples) {
-  const response = await openai.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: MODEL,
     messages: [
       {
