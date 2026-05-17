@@ -135,11 +135,11 @@ async function refineQuery(originalSql, feedback, schemaString, examples) {
     messages: [
       {
         role: 'system',
-        content: `You are an expert SQL query refiner. Given an original query, user feedback, and the database schema, produce an improved query. Return JSON: { "sql": "...", "explanation": "...", "changes_made": "..." }`,
+        content: `You are an expert SQL query refiner. Given an original query, user feedback, and the database schema, produce an improved query. Return JSON: { "sql": "...", "explanation": "...", "changes_made": "...", "confidence": 0.0-1.0, "tables_used": ["table1"] }`,
       },
       {
         role: 'user',
-        content: `Schema:\n${schemaString}\n\nOriginal SQL:\n${originalSql}\n\nUser Feedback: "${feedback}"\n\nOriginal Examples:\n${JSON.stringify(examples, null, 2)}\n\nRefine the query based on the feedback.`,
+        content: `Schema:\n${schemaString}\n\nOriginal SQL:\n${originalSql}\n\nUser Feedback: "${feedback}"${examples.length > 0 ? `\n\nOriginal Examples:\n${JSON.stringify(examples, null, 2)}` : ''}\n\nRefine the query based on the feedback.`,
       },
     ],
     temperature: 0.2,

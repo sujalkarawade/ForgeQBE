@@ -99,7 +99,7 @@ router.post('/refine', [
   body('sessionId').notEmpty(),
   body('originalSql').notEmpty(),
   body('feedback').notEmpty().withMessage('feedback is required'),
-  body('examples').isArray({ min: 1 }),
+  body('examples').isArray(),
 ], async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -119,6 +119,8 @@ router.post('/refine', [
       sql: safeSql,
       explanation: refined.explanation,
       changesMade: refined.changes_made,
+      confidence: refined.confidence || null,
+      tablesUsed: refined.tables_used || [],
       results: {
         rows: queryResult.rows,
         rowCount: queryResult.rowCount,

@@ -13,11 +13,15 @@ export default function QueryResult({ result, loading }) {
   const [feedback, setFeedback] = useState('');
   const [refining, setRefining] = useState(false);
   const [currentResult, setCurrentResult] = useState(result);
+  // Stack of previous results for undo
+  const [history, setHistory] = useState([]);
 
-  // Sync when parent result changes
+  // Sync when parent result changes (new query generated)
   React.useEffect(() => {
     setCurrentResult(result);
+    setHistory([]);
     setActiveTab('results');
+    setFeedback('');
   }, [result]);
 
   const handleRefine = async () => {
@@ -33,19 +37,48 @@ export default function QueryResult({ result, loading }) {
         feedback,
         examples: [],
       });
-      setCurrentResult(prev => ({ ...prev, ...res.data }));
+
+      // Push current onto undo stack before replacing
+      setHistory(prev => [...prev, currentResult]);
+
+      const refined = {
+        ...currentResult,
+        sql: res.data.sql,
+        explanation: res.data.explanation,
+        changesMade: res.data.changesMade,
+        // Preserve confidence/tablesUsed from refine if returned, else keep previous
+        confidence: res.data.confidence ?? currentResult.confidence,
+        tablesUsed: res.data.tablesUsed?.length ? res.data.tablesUsed : currentResult.tablesUsed,
+        results: res.data.results,
+        validation: res.data.validation,
+        // Clear reasoning and candidates — they don't apply to refined queries
+        reasoning: null,
+        candidates: [],
+      };
+
+      setCurrentResult(refined);
       addToHistory({
         sql: res.data.sql,
         rowCount: res.data.results.rowCount,
         validation: res.data.validation,
       });
       setFeedback('');
+      setActiveTab('results');
       toast.success('Query refined!');
     } catch (err) {
       toast.error(err.message);
     } finally {
       setRefining(false);
     }
+  };
+
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory(h => h.slice(0, -1));
+    setCurrentResult(prev);
+    setActiveTab('results');
+    toast('Reverted to previous query', { icon: '↩' });
   };
 
   if (loading) {
@@ -98,12 +131,27 @@ export default function QueryResult({ result, loading }) {
             <span className="result-stat">
               {currentResult.results?.duration}ms
             </span>
-            <span className="result-stat confidence">
-              {Math.round((currentResult.confidence || 0) * 100)}% confidence
-            </span>
+            {currentResult.confidence != null && (
+              <span className="result-stat confidence">
+                {Math.round(currentResult.confidence * 100)}% confidence
+              </span>
+            )}
           </div>
         </div>
+        {history.length > 0 && (
+          <button className="btn-undo" onClick={handleUndo} title="Undo last refinement">
+            ↩ Undo
+          </button>
+        )}
       </div>
+
+      {/* Changes-made banner — shown after a refinement */}
+      {currentResult.changesMade && (
+        <div className="changes-banner">
+          <span className="changes-icon">✦</span>
+          <span className="changes-text">{currentResult.changesMade}</span>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="result-tabs">
@@ -206,7 +254,7 @@ export default function QueryResult({ result, loading }) {
         )}
       </div>
 
-      {/* Refine section */}
+      {/* Refine section — only shown when there's a valid result */}
       <div className="refine-section">
         <h3 className="refine-title">Refine Query</h3>
         <div className="refine-input-row">
@@ -216,7 +264,8 @@ export default function QueryResult({ result, loading }) {
             value={feedback}
             onChange={e => setFeedback(e.target.value)}
             placeholder="e.g. 'Also filter by status = active' or 'Add ORDER BY created_at DESC'"
-            onKeyDown={e => e.key === 'Enter' && handleRefine()}
+            onKeyDown={e => e.key === 'Enter' && !refining && handleRefine()}
+            disabled={refining}
           />
           <button
             className="btn-refine"
@@ -226,6 +275,12 @@ export default function QueryResult({ result, loading }) {
             {refining ? <span className="spinner-sm" /> : '↺'} Refine
           </button>
         </div>
+        {history.length > 0 && (
+          <p className="refine-history-hint">
+            {history.length} refinement{history.length > 1 ? 's' : ''} applied —{' '}
+            <button className="refine-undo-link" onClick={handleUndo}>undo last</button>
+          </p>
+        )}
       </div>
     </div>
   );
