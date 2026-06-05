@@ -1,4 +1,4 @@
-# QBE Explorer — Query-by-Example Database Explorer
+# ForgeQBE — Query-by-Example Database Explorer
 
 > Show examples of data you want → AI learns the pattern → generates correct SQL queries.
 
@@ -33,7 +33,7 @@ Like GitHub Copilot, but for databases.
 ## Project Structure
 
 ```
-qbe-explorer/
+forgeqbe/
 ├── backend/
 │   ├── src/
 │   │   ├── index.js              # Express server entry
