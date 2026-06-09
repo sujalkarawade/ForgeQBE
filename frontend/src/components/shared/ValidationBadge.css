@@ -1,29 +1,31 @@
+/* ─── Validation Badge ───────────────────────────────────── */
 .validation-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: var(--radius-xl);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
 }
 
 .validation-badge.valid {
-  background: var(--success-dim);
+  background: var(--success-bg);
   color: var(--success);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  border: 1px solid var(--success-border);
 }
 
 .validation-badge.partial {
-  background: var(--warning-dim);
+  background: var(--warning-bg);
   color: var(--warning);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid var(--warning-border);
 }
 
 .validation-badge.invalid {
-  background: var(--error-dim);
+  background: var(--error-bg);
   color: var(--error);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--error-border);
 }
 
-.vb-icon { font-size: 11px; }
+.vb-icon { font-size: 10px; }

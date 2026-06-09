@@ -1,47 +1,51 @@
+/* ─── SQL Block ──────────────────────────────────────────── */
 .sql-block {
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
+  box-shadow: var(--shadow-xs);
 }
 
 .sql-block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
+  padding: 7px 14px;
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border);
 }
 
 .sql-block-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .sql-copy-btn {
   background: none;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
   padding: 2px 8px;
-  border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
+  border-radius: var(--radius-xs);
+  transition: all 0.15s;
 }
 
 .sql-copy-btn:hover {
   color: var(--text-primary);
-  background: var(--bg-hover);
+  border-color: var(--border);
+  background: var(--bg-primary);
 }
 
 .sql-code {
   padding: 16px;
   font-family: var(--font-mono);
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--text-secondary);
   overflow-x: auto;
   white-space: pre;
@@ -49,13 +53,13 @@
 }
 
 .sql-block.compact .sql-code {
-  padding: 12px;
+  padding: 11px 14px;
   font-size: 12px;
 }
 
-/* Syntax highlighting */
-.sql-keyword { color: #818cf8; font-weight: 600; }
-.sql-string { color: #34d399; }
-.sql-number { color: #fb923c; }
-.sql-comment { color: #64748b; font-style: italic; }
-.sql-ident { color: #e2e8f0; }
+/* Syntax highlighting — clean, no-glow */
+.sql-keyword { color: var(--accent); font-weight: 600; }
+.sql-string  { color: var(--success); }
+.sql-number  { color: #c06c00; }
+.sql-comment { color: var(--text-placeholder); font-style: italic; }
+.sql-ident   { color: var(--text-primary); }

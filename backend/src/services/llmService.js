@@ -1,15 +1,22 @@
 const OpenAI = require('openai');
 
-const MODEL = process.env.LLM_MODEL || 'gpt-4';
+const MODEL = process.env.LLM_MODEL || 'openai/gpt-4o';
 
 // Lazy initialization — avoids crash on startup when key is not yet set
 let _openai = null;
 function getClient() {
   if (!_openai) {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not set. Add it to your .env file.');
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error('OPENROUTER_API_KEY is not set. Add it to your .env file.');
     }
-    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    _openai = new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
+        'X-Title': process.env.APP_NAME || 'QBE Explorer',
+      },
+    });
   }
   return _openai;
 }
@@ -30,12 +37,14 @@ RULES:
 3. Prefer specific WHERE clauses over full table scans when the examples suggest filtering.
 4. If examples suggest aggregation (count, sum, avg), include GROUP BY.
 5. If examples suggest ordering, include ORDER BY.
-6. Always return a JSON response with this exact structure:
+6. Do NOT use UNION or UNION ALL.
+7. Return ONLY a raw JSON object — no markdown, no code fences, no explanation outside the JSON.
+8. Use this exact JSON structure:
 {
   "sql": "the final SQL query",
   "explanation": "plain English explanation of what the query does and why",
-  "confidence": 0.0-1.0,
-  "tables_used": ["table1", "table2"],
+  "confidence": 0.0,
+  "tables_used": ["table1"],
   "reasoning": "step-by-step reasoning of how you derived the query from the examples"
 }`;
 }
@@ -66,6 +75,16 @@ function buildUserPrompt(examples, candidateQueries, naturalLanguageHint) {
 }
 
 /**
+ * Strip markdown code fences that some models wrap around JSON responses.
+ * e.g. ```json { ... } ``` → { ... }
+ */
+function stripMarkdownFences(text) {
+  if (!text) return text;
+  // Remove ```json ... ``` or ``` ... ```
+  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+}
+
+/**
  * Rank and refine candidate queries using the LLM.
  * Returns the best query with explanation.
  */
@@ -81,10 +100,10 @@ async function rankAndRefineQueries(examples, candidateQueries, schemaString, na
     ],
     temperature: 0.2,
     max_tokens: 1500,
-    response_format: { type: 'json_object' },
   });
 
-  const content = response.choices[0].message.content;
+  const raw = response.choices[0].message.content;
+  const content = stripMarkdownFences(raw);
 
   try {
     const parsed = JSON.parse(content);
@@ -97,7 +116,7 @@ async function rankAndRefineQueries(examples, candidateQueries, schemaString, na
       tokensUsed: response.usage?.total_tokens || 0,
     };
   } catch (err) {
-    throw new Error(`LLM returned invalid JSON: ${content}`);
+    throw new Error(`LLM returned invalid JSON: ${raw}`);
   }
 }
 
@@ -119,10 +138,9 @@ async function explainQuery(sql, schemaString) {
     ],
     temperature: 0.1,
     max_tokens: 500,
-    response_format: { type: 'json_object' },
   });
 
-  const parsed = JSON.parse(response.choices[0].message.content);
+  const parsed = JSON.parse(stripMarkdownFences(response.choices[0].message.content));
   return parsed;
 }
 
@@ -144,10 +162,9 @@ async function refineQuery(originalSql, feedback, schemaString, examples) {
     ],
     temperature: 0.2,
     max_tokens: 1000,
-    response_format: { type: 'json_object' },
   });
 
-  return JSON.parse(response.choices[0].message.content);
+  return JSON.parse(stripMarkdownFences(response.choices[0].message.content));
 }
 
 module.exports = { rankAndRefineQueries, explainQuery, refineQuery };

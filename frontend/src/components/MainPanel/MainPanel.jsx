@@ -15,7 +15,12 @@ export default function MainPanel() {
       <div className="main-header">
         <div className="main-header-left">
           <h1 className="main-title">Query by Example</h1>
-          <p className="main-subtitle">Show examples of data you want → AI generates the SQL</p>
+          <span className="main-title-sep">/</span>
+          <p className="main-subtitle">Show data examples → AI generates SQL</p>
+        </div>
+        <div className="main-header-badge">
+          <span />
+          Powered by OpenRouter
         </div>
       </div>
 

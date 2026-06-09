@@ -27,8 +27,8 @@ services:
     environment:
       PORT: 5000
       NODE_ENV: development
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      LLM_MODEL: ${LLM_MODEL:-gpt-4}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-openai/gpt-4o}
     depends_on:
       postgres:
         condition: service_healthy

@@ -15,8 +15,13 @@ export default function Sidebar({ onConnectClick }) {
       {/* Header */}
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <span className="sidebar-logo-icon">⬡</span>
-          <span className="sidebar-logo-text">QBE Explorer</span>
+          <div className="sidebar-logo-mark">
+            <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" />
+            </svg>
+          </div>
+          <span className="sidebar-logo-text">ForgeQBE</span>
+          <span className="sidebar-logo-badge">Beta</span>
         </div>
       </div>
 
@@ -24,16 +29,23 @@ export default function Sidebar({ onConnectClick }) {
       <div className="sidebar-connection">
         {isConnected ? (
           <div className="connection-active">
-            <div className="connection-dot connected" />
+            <div className="connection-pulse" />
             <div className="connection-info">
               <span className="connection-db">{connectionInfo?.database}</span>
               <span className="connection-host">{connectionInfo?.host}:{connectionInfo?.port || 5432}</span>
             </div>
-            <button className="btn-disconnect" onClick={disconnect} title="Disconnect">✕</button>
+            <button className="btn-disconnect" onClick={disconnect} title="Disconnect">
+              Disconnect
+            </button>
           </div>
         ) : (
           <button className="btn-connect" onClick={onConnectClick}>
-            <span>⚡</span> Connect Database
+            <svg className="btn-connect-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="5" cy="8" r="3" />
+              <circle cx="11" cy="8" r="3" />
+              <path d="M8 5v6" />
+            </svg>
+            Connect Database
           </button>
         )}
       </div>

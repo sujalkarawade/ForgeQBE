@@ -55,7 +55,13 @@ export default function ConnectModal({ onClose }) {
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div className="modal-header">
-          <h2 id="modal-title">Connect to PostgreSQL</h2>
+          <div className="modal-header-left">
+            <div className="modal-header-icon">⬡</div>
+            <div>
+              <h2 id="modal-title">Connect to PostgreSQL</h2>
+              <p>Enter your database credentials below</p>
+            </div>
+          </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
 

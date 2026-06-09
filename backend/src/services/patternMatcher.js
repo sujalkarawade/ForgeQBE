@@ -213,9 +213,7 @@ function buildCandidateQueries(examples, schema) {
     let sql = `SELECT ${selectClause} FROM "${table}"`;
     if (whereClause) sql += `\n${whereClause}`;
     if (hasOrdering) sql += `\nORDER BY 1 DESC`;
-    sql += ';';
-
-    candidates.push({
+    sql += ';';    candidates.push({
       table,
       sql,
       filters,

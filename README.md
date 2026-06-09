@@ -1,18 +1,18 @@
 # ForgeQBE — Query-by-Example Database Explorer
 
-> Show examples of data you want → AI learns the pattern → generates correct SQL queries.
+> Show examples of the data you want → AI learns the pattern → generates accurate SQL queries.
 
-Like GitHub Copilot, but for databases.
+No SQL knowledge required. Connect your PostgreSQL database, provide a few example rows, and ForgeQBE figures out the query.
 
 ---
 
 ## How It Works
 
-1. **Connect** your PostgreSQL database
-2. **Show examples** — enter rows of data you want to find (table UI or JSON)
-3. **Pattern analysis** — the system extracts schema, parses examples, identifies filtering/aggregation logic, and builds candidate SQL queries
-4. **LLM refinement** — GPT-4 ranks and refines the candidates into the best query
-5. **Execute & validate** — the query runs on your real DB and results are validated against your examples
+1. **Connect** your PostgreSQL database via the sidebar
+2. **Provide examples** — enter rows of data you want to find using the table editor or JSON input
+3. **Pattern analysis** — the backend extracts your schema, parses examples, identifies filters and aggregations, and builds candidate SQL queries
+4. **LLM refinement** — OpenRouter (GPT-4o by default) ranks and refines candidates into the best query
+5. **Execute & validate** — the query runs on your real database and results are validated against your examples
 6. **Iterate** — refine the query with natural language feedback
 
 ---
@@ -20,13 +20,14 @@ Like GitHub Copilot, but for databases.
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
+|-------|------------|
 | Backend | Node.js + Express |
-| LLM | OpenAI GPT-4 |
-| Database | PostgreSQL (via `pg`) |
-| DB Abstraction | Sequelize-compatible connection pooling |
-| Frontend | React (plain JS + CSS) |
-| API | REST (JSON) |
+| LLM | OpenRouter API (OpenAI-compatible) |
+| Default Model | `openai/gpt-4o` (configurable) |
+| Database | PostgreSQL via `pg` |
+| Frontend | React 18 + Vite 5 |
+| Styling | Plain CSS — white theme |
+| API | REST / JSON |
 
 ---
 
@@ -36,101 +37,173 @@ Like GitHub Copilot, but for databases.
 forgeqbe/
 ├── backend/
 │   ├── src/
-│   │   ├── index.js              # Express server entry
+│   │   ├── index.js                    # Express server entry
 │   │   ├── db/
-│   │   │   ├── connectionManager.js   # PostgreSQL pool management
-│   │   │   └── schemaInspector.js     # Schema extraction
+│   │   │   ├── connectionManager.js    # PostgreSQL pool management
+│   │   │   └── schemaInspector.js      # Schema extraction
 │   │   ├── services/
-│   │   │   ├── patternMatcher.js      # Example → SQL candidate logic
-│   │   │   ├── llmService.js          # OpenAI integration
-│   │   │   └── queryValidator.js      # Result validation
+│   │   │   ├── patternMatcher.js       # Example → SQL candidate logic
+│   │   │   ├── llmService.js           # OpenRouter integration
+│   │   │   └── queryValidator.js       # Result validation
 │   │   └── routes/
-│   │       ├── database.js    # Connect/disconnect endpoints
-│   │       ├── schema.js      # Schema inspection endpoints
-│   │       ├── query.js       # Generate/execute/refine endpoints
-│   │       └── session.js     # Session management
-│   ├── .env.example
+│   │       ├── database.js             # Connect/disconnect endpoints
+│   │       ├── schema.js               # Schema inspection endpoints
+│   │       ├── query.js                # Generate/execute/refine endpoints
+│   │       └── session.js              # Session management
+│   ├── .env
 │   └── package.json
 │
-└── frontend/
-    ├── public/
-    │   └── index.html
-    ├── src/
-    │   ├── index.js
-    │   ├── App.js
-    │   ├── context/
-    │   │   └── SessionContext.js   # Global state (connection, schema, history)
-    │   ├── services/
-    │   │   └── api.js              # Axios client
-    │   ├── components/
-    │   │   ├── Sidebar/            # Schema tree, query history, connection status
-    │   │   ├── MainPanel/          # Example editor, query results
-    │   │   ├── ConnectModal/       # DB connection form
-    │   │   └── shared/             # SqlBlock, DataTable, ValidationBadge
-    │   └── styles/
-    └── package.json
+├── frontend/
+│   ├── index.html                      # Vite entry point
+│   ├── vite.config.js
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── context/
+│       │   └── SessionContext.jsx      # Global state (connection, schema, history)
+│       ├── services/
+│       │   └── api.js                  # Axios client
+│       ├── components/
+│       │   ├── Sidebar/                # Schema tree, query history, connection status
+│       │   ├── MainPanel/              # Example editor, query results
+│       │   ├── ConnectModal/           # DB connection form
+│       │   └── shared/                 # SqlBlock, DataTable, ValidationBadge
+│       └── styles/
+│           ├── global.css
+│           └── App.css
+│
+├── demo/
+│   └── seed.sql                        # Sample PostgreSQL data
+└── docker-compose.yml
 ```
 
 ---
 
 ## Quick Start
 
-### 1. Backend
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database (local, remote, or via Docker)
+- [OpenRouter API key](https://openrouter.ai/keys)
+
+### 1. Configure environment
+
+```bash
+# backend/.env
+PORT=5000
+NODE_ENV=development
+
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+LLM_MODEL=openai/gpt-4o
+
+APP_URL=http://localhost:3000
+APP_NAME=ForgeQBE
+```
+
+### 2. Start the backend
 
 ```bash
 cd backend
-cp .env.example .env
-# Edit .env — add your OPENAI_API_KEY
 npm install
 npm run dev
 ```
 
-### 2. Frontend
+Backend runs at `http://localhost:5000`
+
+### 3. Start the frontend
 
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Frontend runs at `http://localhost:3000`
 
 ---
 
-## API Endpoints
+## Docker (run everything at once)
+
+Starts PostgreSQL + backend + frontend together with a seeded demo database.
+
+```bash
+docker-compose up --build
+```
+
+Set `OPENROUTER_API_KEY` in your shell environment before running, or add it to a `.env` file at the project root:
+
+```bash
+OPENROUTER_API_KEY=your_key_here docker-compose up --build
+```
+
+Open [http://localhost:3000](http://localhost:3000) and connect using:
+
+| Field | Value |
+|-------|-------|
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `qbe_demo` |
+| User | `postgres` |
+| Password | `postgres` |
+
+---
+
+## Changing the LLM Model
+
+ForgeQBE uses OpenRouter, which gives access to models from OpenAI, Anthropic, Google, and more. Change the model by updating `LLM_MODEL` in `backend/.env`:
+
+```env
+LLM_MODEL=openai/gpt-4o              # default
+LLM_MODEL=anthropic/claude-3.5-sonnet
+LLM_MODEL=google/gemini-2.5-pro
+LLM_MODEL=openai/gpt-4o-mini          # lower cost
+```
+
+Full model list at [openrouter.ai/models](https://openrouter.ai/models).
+
+---
+
+## API Reference
 
 ### Database
+
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/database/connect` | Connect to a PostgreSQL database |
-| POST | `/api/database/test` | Test connection without storing |
-| DELETE | `/api/database/disconnect/:sessionId` | Disconnect |
+| `POST` | `/api/database/connect` | Connect to a PostgreSQL database |
+| `POST` | `/api/database/test` | Test a connection without storing it |
+| `DELETE` | `/api/database/disconnect/:sessionId` | Disconnect a session |
 
 ### Schema
+
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/schema/:sessionId` | Get full schema |
-| GET | `/api/schema/:sessionId/tables/:table/sample` | Get sample rows |
+| `GET` | `/api/schema/:sessionId` | Get full schema |
+| `GET` | `/api/schema/:sessionId/tables/:table/sample` | Get sample rows from a table |
 
 ### Query
+
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/query/generate` | Main: examples → SQL + results |
-| POST | `/api/query/execute` | Execute raw SQL (read-only) |
-| POST | `/api/query/refine` | Refine query with feedback |
+| `POST` | `/api/query/generate` | Examples → SQL + executed results |
+| `POST` | `/api/query/execute` | Execute raw SQL (read-only) |
+| `POST` | `/api/query/refine` | Refine an existing query with feedback |
 
-### `/api/query/generate` Request Body
+#### `POST /api/query/generate`
+
+**Request**
 ```json
 {
   "sessionId": "uuid",
   "examples": [
-    { "name": "Alice", "status": "active", "country": "US" }
+    { "name": "Alice", "status": "active", "country": "US" },
+    { "name": "Bob",   "status": "active", "country": "US" }
   ],
   "hint": "Find active users in the US"
 }
 ```
 
-### `/api/query/generate` Response
+**Response**
 ```json
 {
   "sql": "SELECT name, status, country FROM users WHERE status = 'active' AND country = 'US';",
@@ -139,25 +212,15 @@ Open [http://localhost:3000](http://localhost:3000)
   "confidence": 0.92,
   "tablesUsed": ["users"],
   "results": { "rows": [...], "rowCount": 42, "duration": 12 },
-  "validation": { "isValid": true, "matchRate": 1.0, "matchedExamples": 1 },
+  "validation": { "isValid": true, "matchRate": 1.0, "matchedExamples": 2 },
   "candidates": [{ "sql": "...", "confidence": 0.85 }]
 }
 ```
 
 ---
 
-## Environment Variables
-
-```env
-PORT=5000
-OPENAI_API_KEY=sk-...
-LLM_MODEL=gpt-4          # or gpt-3.5-turbo for lower cost
-```
-
----
-
 ## Security
 
-- All SQL is sanitized before execution — DDL/DML operations (DROP, DELETE, INSERT, UPDATE, etc.) are blocked
-- Only SELECT queries are allowed through the execute endpoint
-- Connection credentials are stored in-memory per session only (not persisted)
+- DDL/DML operations (`DROP`, `DELETE`, `INSERT`, `UPDATE`, etc.) are blocked at the validator level
+- Only `SELECT` queries are permitted through the execute endpoint
+- Database credentials are stored in-memory per session only — never persisted to disk

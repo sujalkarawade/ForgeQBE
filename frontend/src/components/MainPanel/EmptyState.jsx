@@ -4,39 +4,47 @@ import './EmptyState.css';
 export default function EmptyState() {
   return (
     <div className="empty-state">
-      <div className="empty-icon">⬡</div>
-      <h2>Connect a Database to Get Started</h2>
+      {/* Hero mark */}
+      <div className="empty-hero">
+        <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2L24 7.5V20.5L14 26L4 20.5V7.5L14 2Z" />
+        </svg>
+      </div>
+
+      <h2>Connect a Database to Begin</h2>
       <p>
-        QBE Explorer lets you find data by example — no SQL knowledge required.
-        Connect your PostgreSQL database and show the AI what data you're looking for.
+        ForgeQBE lets you find data by example — no SQL knowledge needed.
+        Connect your PostgreSQL database and show what data you're looking for.
       </p>
 
+      {/* Steps */}
       <div className="empty-steps">
         <div className="empty-step">
           <div className="step-num">1</div>
           <div className="step-content">
             <strong>Connect</strong>
-            <span>Click "Connect Database" in the sidebar and enter your PostgreSQL credentials</span>
+            <span>Enter your PostgreSQL credentials in the sidebar</span>
           </div>
         </div>
         <div className="empty-step">
           <div className="step-num">2</div>
           <div className="step-content">
             <strong>Show Examples</strong>
-            <span>Enter rows of data that represent what you want to find</span>
+            <span>Enter rows that represent the data you want to find</span>
           </div>
         </div>
         <div className="empty-step">
           <div className="step-num">3</div>
           <div className="step-content">
             <strong>Get SQL</strong>
-            <span>AI analyzes your examples, generates SQL, and validates the results</span>
+            <span>AI analyzes patterns, generates SQL, and validates results</span>
           </div>
         </div>
       </div>
 
+      {/* Demo */}
       <div className="empty-example">
-        <p className="empty-example-label">Example input:</p>
+        <p className="empty-example-label">Example input</p>
         <div className="empty-example-table">
           <table>
             <thead>
@@ -48,7 +56,7 @@ export default function EmptyState() {
             </tbody>
           </table>
         </div>
-        <p className="empty-example-arrow">↓</p>
+        <div className="empty-example-arrow">AI generates</div>
         <div className="empty-example-sql">
           <code>SELECT name, status, country FROM users WHERE status = 'active' AND country = 'US';</code>
         </div>
