@@ -7,11 +7,21 @@ import './styles/App.css';
 
 function App() {
   const [showConnect, setShowConnect] = useState(false);
+  const [activeSavedQueryId, setActiveSavedQueryId] = useState(null);
+
+  const handleLoadSavedQuery = useCallback(async (query) => {
+    setActiveSavedQueryId(query.id);
+    window.dispatchEvent(new CustomEvent('load-saved-query', { detail: query }));
+  }, []);
 
   return (
     <SessionProvider>
       <div className="app">
-        <Sidebar onConnectClick={() => setShowConnect(true)} />
+        <Sidebar
+          onConnectClick={() => setShowConnect(true)}
+          onLoadSavedQuery={handleLoadSavedQuery}
+          activeSavedQueryId={activeSavedQueryId}
+        />
         <MainPanel />
         {showConnect && <ConnectModal onClose={() => setShowConnect(false)} />}
       </div>

@@ -9,7 +9,7 @@ import { generateCSV, generateJSON, getExportFilename, downloadBlob } from '../.
 import './QueryResult.css';
 
 export default function QueryResult({ result, loading }) {
-  const { sessionId, addToHistory } = useSession();
+  const { sessionId, addToHistory, saveQuery } = useSession();
   const [activeTab, setActiveTab] = useState('results');
   const [feedback, setFeedback] = useState('');
   const [refining, setRefining] = useState(false);
@@ -19,6 +19,10 @@ export default function QueryResult({ result, loading }) {
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const exportRef = useRef(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const saveInputRef = useRef(null);
 
   // Sync when parent result changes (new query generated)
   React.useEffect(() => {
@@ -38,6 +42,13 @@ export default function QueryResult({ result, loading }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Focus save input when modal opens
+  useEffect(() => {
+    if (showSaveModal) {
+      setTimeout(() => saveInputRef.current?.focus(), 100);
+    }
+  }, [showSaveModal]);
 
   const handleRefine = async () => {
     if (!feedback.trim()) {
@@ -94,6 +105,25 @@ export default function QueryResult({ result, loading }) {
     setCurrentResult(prev);
     setActiveTab('results');
     toast('Reverted to previous query', { icon: '↩' });
+  };
+
+  const handleSaveClick = () => {
+    setSaveName('');
+    setShowSaveModal(true);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!saveName.trim()) return;
+    setSaving(true);
+    setShowSaveModal(false);
+    const query = currentResult;
+    await saveQuery(saveName.trim(), query.sql, query.explanation || null);
+    setSaving(false);
+  };
+
+  const handleSaveKeyDown = (e) => {
+    if (e.key === 'Enter') handleConfirmSave();
+    if (e.key === 'Escape') setShowSaveModal(false);
   };
 
   const handleExport = async (format) => {
@@ -183,6 +213,16 @@ export default function QueryResult({ result, loading }) {
           </div>
         </div>
         <div className="result-header-right">
+          {currentResult.sql && (
+            <button
+              className="btn-save-query"
+              onClick={handleSaveClick}
+              disabled={saving}
+              title="Save this query"
+            >
+              {saving ? <span className="spinner-sm" /> : '★'} Save
+            </button>
+          )}
           {currentResult.results?.rows?.length > 0 && (
             <div className="export-wrapper" ref={exportRef}>
               <button
@@ -333,6 +373,42 @@ export default function QueryResult({ result, loading }) {
           </div>
         )}
       </div>
+
+      {/* Save query name modal */}
+      {showSaveModal && (
+        <div className="save-modal-overlay" onClick={() => setShowSaveModal(false)}>
+          <div className="save-modal" onClick={e => e.stopPropagation()}>
+            <div className="save-modal-header">
+              <span className="save-modal-title">Save Query</span>
+              <button className="save-modal-close" onClick={() => setShowSaveModal(false)}>✕</button>
+            </div>
+            <div className="save-modal-body">
+              <label className="save-modal-label">Query name</label>
+              <input
+                ref={saveInputRef}
+                className="save-modal-input"
+                type="text"
+                value={saveName}
+                onChange={e => setSaveName(e.target.value)}
+                onKeyDown={handleSaveKeyDown}
+                placeholder="e.g. Active US Customers"
+              />
+            </div>
+            <div className="save-modal-footer">
+              <button className="save-modal-btn-cancel" onClick={() => setShowSaveModal(false)}>
+                Cancel
+              </button>
+              <button
+                className="save-modal-btn-save"
+                onClick={handleConfirmSave}
+                disabled={!saveName.trim()}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Refine section — only shown when there's a valid result */}
       <div className="refine-section">

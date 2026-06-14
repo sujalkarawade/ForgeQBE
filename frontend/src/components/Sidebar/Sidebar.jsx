@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useSession } from '../../context/SessionContext';
 import SchemaTree from './SchemaTree';
 import QueryHistory from './QueryHistory';
+import SavedQueries from './SavedQueries';
 import './Sidebar.css';
 
-const tabs = ['Schema', 'History'];
+const tabs = ['Schema', 'Saved', 'History'];
 
-export default function Sidebar({ onConnectClick }) {
+export default function Sidebar({ onConnectClick, onLoadSavedQuery, activeSavedQueryId }) {
   const { isConnected, connectionInfo, disconnect, schemaLoading } = useSession();
   const [activeTab, setActiveTab] = useState('Schema');
 
@@ -69,6 +70,12 @@ export default function Sidebar({ onConnectClick }) {
           schemaLoading
             ? <div className="sidebar-loading"><span className="spinner" /> Loading schema…</div>
             : <SchemaTree />
+        )}
+        {activeTab === 'Saved' && (
+          <SavedQueries
+            onLoadQuery={onLoadSavedQuery}
+            activeQueryId={activeSavedQueryId}
+          />
         )}
         {activeTab === 'History' && <QueryHistory />}
       </div>

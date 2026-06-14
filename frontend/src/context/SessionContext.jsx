@@ -12,6 +12,8 @@ export function SessionProvider({ children }) {
   const [schema, setSchema] = useState(null);
   const [schemaLoading, setSchemaLoading] = useState(false);
   const [queryHistory, setQueryHistory] = useState([]);
+  const [savedQueries, setSavedQueries] = useState([]);
+  const [savedQueriesLoading, setSavedQueriesLoading] = useState(false);
 
   const connect = useCallback(async (dbConfig) => {
     const id = uuidv4();
@@ -43,6 +45,7 @@ export function SessionProvider({ children }) {
     setConnectionInfo(null);
     setSchema(null);
     setQueryHistory([]);
+    setSavedQueries([]);
   }, [sessionId]);
 
   const refreshSchema = useCallback(async () => {
@@ -60,6 +63,62 @@ export function SessionProvider({ children }) {
     setQueryHistory(prev => [{ id: uuidv4(), timestamp: new Date().toISOString(), ...entry }, ...prev].slice(0, 50));
   }, []);
 
+  // ─── Saved Queries ──────────────────────────────────────────
+
+  const fetchSavedQueries = useCallback(async () => {
+    if (!sessionId) return;
+    setSavedQueriesLoading(true);
+    try {
+      const res = await api.get(`/query/saved/${sessionId}`);
+      setSavedQueries(res.data);
+    } catch (err) {
+      console.error('Failed to fetch saved queries:', err.message);
+    } finally {
+      setSavedQueriesLoading(false);
+    }
+  }, [sessionId]);
+
+  const saveQuery = useCallback(async (name, sql, explanation) => {
+    if (!sessionId) {
+      toast.error('No active session.');
+      return null;
+    }
+    try {
+      const res = await api.post('/query/save', {
+        sessionId,
+        name,
+        sql,
+        explanation: explanation || null,
+      });
+      setSavedQueries(prev => [res.data, ...prev]);
+      toast.success(`Query "${name}" saved!`);
+      return res.data;
+    } catch (err) {
+      toast.error(`Failed to save query: ${err.message}`);
+      return null;
+    }
+  }, [sessionId]);
+
+  const renameQuery = useCallback(async (id, newName) => {
+    try {
+      await api.put(`/query/saved/${id}`, { name: newName });
+      setSavedQueries(prev => prev.map(q => q.id === id ? { ...q, name: newName } : q));
+      toast.success('Query renamed.');
+    } catch (err) {
+      toast.error(`Failed to rename: ${err.message}`);
+    }
+  }, []);
+
+  const deleteQuery = useCallback(async (id) => {
+    try {
+      await api.delete(`/query/saved/${id}`);
+      setSavedQueries(prev => prev.filter(q => q.id !== id));
+      toast.success('Query deleted.');
+    } catch (err) {
+      toast.error(`Failed to delete: ${err.message}`);
+    }
+  }, []);
+
   return (
     <SessionContext.Provider value={{
       sessionId,
@@ -68,10 +127,16 @@ export function SessionProvider({ children }) {
       schema,
       schemaLoading,
       queryHistory,
+      savedQueries,
+      savedQueriesLoading,
       connect,
       disconnect,
       refreshSchema,
       addToHistory,
+      fetchSavedQueries,
+      saveQuery,
+      renameQuery,
+      deleteQuery,
     }}>
       {children}
     </SessionContext.Provider>
