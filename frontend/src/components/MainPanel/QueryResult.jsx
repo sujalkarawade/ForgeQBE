@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSession } from '../../context/SessionContext';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import SqlBlock from '../shared/SqlBlock';
 import DataTable from '../shared/DataTable';
 import ValidationBadge from '../shared/ValidationBadge';
+import { generateCSV, generateJSON, getExportFilename, downloadBlob } from '../../services/exportUtils';
 import './QueryResult.css';
 
 export default function QueryResult({ result, loading }) {
@@ -15,6 +16,9 @@ export default function QueryResult({ result, loading }) {
   const [currentResult, setCurrentResult] = useState(result);
   // Stack of previous results for undo
   const [history, setHistory] = useState([]);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const exportRef = useRef(null);
 
   // Sync when parent result changes (new query generated)
   React.useEffect(() => {
@@ -23,6 +27,17 @@ export default function QueryResult({ result, loading }) {
     setActiveTab('results');
     setFeedback('');
   }, [result]);
+
+  // Close export dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (exportRef.current && !exportRef.current.contains(e.target)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleRefine = async () => {
     if (!feedback.trim()) {
@@ -79,6 +94,35 @@ export default function QueryResult({ result, loading }) {
     setCurrentResult(prev);
     setActiveTab('results');
     toast('Reverted to previous query', { icon: '↩' });
+  };
+
+  const handleExport = async (format) => {
+    const rows = currentResult.results?.rows || [];
+    const fields = currentResult.results?.fields || [];
+    if (!rows.length) {
+      toast.error('No results to export.');
+      return;
+    }
+    setExportOpen(false);
+    setExporting(true);
+    try {
+      // Use setTimeout to allow the UI to update before heavy work
+      await new Promise(r => setTimeout(r, 0));
+      const blob = format === 'csv'
+        ? generateCSV(rows, fields)
+        : generateJSON(rows);
+      if (!blob) {
+        toast.error('No data available for export.');
+        return;
+      }
+      const filename = getExportFilename(format);
+      downloadBlob(blob, filename);
+      toast.success(`Exported as ${format.toUpperCase()}`);
+    } catch (err) {
+      toast.error(`Export failed: ${err.message}`);
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (loading) {
@@ -138,11 +182,47 @@ export default function QueryResult({ result, loading }) {
             )}
           </div>
         </div>
-        {history.length > 0 && (
-          <button className="btn-undo" onClick={handleUndo} title="Undo last refinement">
-            ↩ Undo
-          </button>
-        )}
+        <div className="result-header-right">
+          {currentResult.results?.rows?.length > 0 && (
+            <div className="export-wrapper" ref={exportRef}>
+              <button
+                className="btn-export"
+                onClick={() => setExportOpen(o => !o)}
+                disabled={exporting}
+                title="Export query results"
+              >
+                {exporting ? <span className="spinner-sm" /> : '⭳'} Export
+              </button>
+              {exportOpen && (
+                <div className="export-dropdown">
+                  <button
+                    className="export-option"
+                    onClick={() => handleExport('csv')}
+                    disabled={exporting}
+                  >
+                    <span className="export-icon">📄</span>
+                    <span className="export-label">Export as CSV</span>
+                    <span className="export-hint">.csv</span>
+                  </button>
+                  <button
+                    className="export-option"
+                    onClick={() => handleExport('json')}
+                    disabled={exporting}
+                  >
+                    <span className="export-icon">📋</span>
+                    <span className="export-label">Export as JSON</span>
+                    <span className="export-hint">.json</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {history.length > 0 && (
+            <button className="btn-undo" onClick={handleUndo} title="Undo last refinement">
+              ↩ Undo
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Changes-made banner — shown after a refinement */}
