@@ -63,6 +63,10 @@ export function SessionProvider({ children }) {
     setQueryHistory(prev => [{ id: uuidv4(), timestamp: new Date().toISOString(), ...entry }, ...prev].slice(0, 50));
   }, []);
 
+  const deleteFromHistory = useCallback((id) => {
+    setQueryHistory(prev => prev.filter(entry => entry.id !== id));
+  }, []);
+
   // ─── Saved Queries ──────────────────────────────────────────
 
   const fetchSavedQueries = useCallback(async () => {
@@ -133,6 +137,7 @@ export function SessionProvider({ children }) {
       disconnect,
       refreshSchema,
       addToHistory,
+      deleteFromHistory,
       fetchSavedQueries,
       saveQuery,
       renameQuery,

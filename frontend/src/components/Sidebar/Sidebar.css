@@ -380,6 +380,32 @@
   border: 1px solid var(--border-light);
 }
 
+.history-delete-btn {
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--text-placeholder);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s, background 0.12s;
+  margin-left: auto;
+}
+
+.history-item:hover .history-delete-btn { opacity: 1; }
+
+.history-delete-btn:hover {
+  color: var(--error);
+  background: var(--error-bg);
+}
+
+
 /* ─── Spinner ────────────────────────────────────────────── */
 .spinner {
   display: inline-block;

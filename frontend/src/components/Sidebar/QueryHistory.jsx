@@ -2,7 +2,7 @@ import React from 'react';
 import { useSession } from '../../context/SessionContext';
 
 export default function QueryHistory() {
-  const { queryHistory } = useSession();
+  const { queryHistory, deleteFromHistory } = useSession();
 
   if (queryHistory.length === 0) {
     return (
@@ -24,6 +24,16 @@ export default function QueryHistory() {
               {new Date(entry.timestamp).toLocaleTimeString()}
             </span>
             <span className="history-rows">{entry.rowCount} rows</span>
+            <button
+              className="history-delete-btn"
+              title="Delete from history"
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteFromHistory(entry.id);
+              }}
+            >
+              ✕
+            </button>
           </div>
           <pre className="history-sql">{entry.sql}</pre>
         </div>
